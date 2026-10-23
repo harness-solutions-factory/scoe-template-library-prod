@@ -1,0 +1,6 @@
+# Hub Manager Registration File
+# -------
+# The Entities List contains a reference to every template in this repository that should have its local HSF Hub Pipeline Registered.
+# -------
+entities: []
+  # - mytemplate
