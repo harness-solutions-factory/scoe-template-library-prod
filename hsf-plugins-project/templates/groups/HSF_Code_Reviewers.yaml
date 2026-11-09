@@ -1,0 +1,9 @@
+---
+tags:
+  purpose: HSF_Code_Reviewers
+role_bindings:
+  - role: _project_viewer
+    resource_group: _all_project_level_resources
+notification_configs:
+  slack:
+    webhook : https://hooks.slack.com/services/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

@@ -1,0 +1,85 @@
+template:
+  identifier: ${TEMPLATE_IDENTIFIER}
+  name: ${TEMPLATE_NAME}
+  %{~ if ORGANIZATION_ID != null ~}
+  orgIdentifier: ${ORGANIZATION_ID}
+  %{~ endif ~}
+  %{~ if PROJECT_ID != null ~}
+  projectIdentifier: ${PROJECT_ID}
+  %{~ endif ~}
+  description: ${TEMPLATE_DESC}
+  versionLabel: ${TEMPLATE_VERSION}
+  tags:
+    ${indent(4, TAGS)}
+  icon: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFbElEQVR4AZRWTYscVRQ9r/6NCzcR6RaFVIOf4EZ3LqIouDH4AUbjR6C6Vm5CjJtsXUgQTMgkiuBCqIqK05MsXIiJO//I9Duec1+/TmdkpkxRp879evfde6tezzR4hGt+Ya+dfbo3zD4xbgyz89c5+/gaZ+evDbOPvhvm575dzs9dXT5CSvyvAuYXfljOP7tF5DQkoE1gC1IMXQSYWyC3kjoydbMPr3J+7hvZ5J64JwvQxkvkrMQEyZHM4gxsmZIN2ypn5DWH+QdfTxYxWQBSOq0dROwPvnhlkZAFt0VoGhIotyER4gDko6TUYeKaLIA5q1klzodj5MpoPQVQG2gKOALKrokh2HIsOv4xWUByHwLZDPPz1wdt20F6wBuotpK+CI63L9lXHCc+JwtwJ9x0KW7VmvJrM28Q8Ls3bNO0wqYyvQbrEze3c7KAhHWfEhepgZAWifoGKB3S03rhJAUugEguQBMq30fxnPR8qIByzm/unvNB+brAmh0P1x0B6ZIpmZbVtb8TBTEgXd1TwFqTuP9yy79fIu+/SN57gfzr+SX/fHZ7OrYFzD//fijnnK3eYwuaEQxmLTBY9M3vAAjHQvHRuRm6SveUZByKfVsO7pDSUIuIAnzW9bXr61bFqpzqRJuCkvXAw8jSDSWUn4otKJ0jbA/83tI25BIPxUMxStLZ13jsADtXn0i4est2WpZPN6VWSIxbuuMNjcKxhoLhPMGJt2volhVf5Nzyj7ZtEOe6dp5VnOAKBQoyKJc203u2HDbJVKKCEk/FaooRS/mgmCyI9do8kYpNLk9EjTcq/nRULHvtICqUA04ku7IWk55lOowuLXuN4RjrscZrFXvnytmlyK4CK85p3sQ0rtaAOxDggC1TC2vlhUssFebOK9tnucYTTd4cUeYOkS9D0wBq/qxYjb9R1a0AX7WTCIoKHWRPYExEr5HpdyGLLYuTQPZA7pvEvmnS4s6Vd9L+2R/Be88NkSaW7zxqWr3+xu+NmworRwF+f7JTP0QHl86k1Xs3+v3398b9d/ewf/YWthzyLRyYAze72DgdDljn8v6dy1C+MoUMWBYaffZjqU1lxXisSTYJdy69seQ/ry7VyQBSQKcPoJOr2zLZhW7O1KYw8J+LG4vZAMYGfheqRMlR8KC6pLGWzXMXvqxV3GArO962HQ7fRo/Oj/hjP/uz/yOyQGj3DURxy5bzCCeA5F24COtmu0L2olAkbNh+aVF8mPTQbVMgp9v6bthHgDdSZfU7YF2ceBruyKBWV7YcyAi/1gZHHsfJXv32GeGT3VwwNquLr42qxhABKbphYdSLEgQn3Pij6JDlMpsqR5wMZi2ThOoKuTz69NRK34CUlNY9XKEQnWsh3Sn0h2SdtVhZZMNROKbaduVqC9b68Imtu3Md2zRbLbW1vwFgdfHMePDl6ykl9JqApzFKNivGm5vEoijCXFtSMom97AJ6vYY+dPjVSodAwZzFGYu6udM0flSsdOQOLr+5OPjKeGuxuvy2itDGmow2AEr1hWtXOkpaP8pXUPXDHHp64rdletL4fZlmgsau+O39UAFb666g/UP1+Iqgp42CbcyD/gcfkCBwgHWuB83WeqfgE+/pAty1QW+YgWw+BvaBIxxrmSfuHc7pAlCziHXDutmbOEVwGJBO/ZLSqV8X+huziDgJDjkJ0wV4A38D0ZEmUHVznYx9Au8+05bNsn6KVZRjiuHY53QBSL2bjo6UM8Yb6axYMG+QOPDu0/oO2EUccRsT12QB6bGfRuS8UBEqJKsObebO1TG2k5GNFbl0n9HvHrfj6pgswAvT4z+PwhKp0btNfRQTxy2NSBylFwA91vQ5T/qVW3rtFP4FAAD//9TSF5AAAAAGSURBVAMAYozIn6zxZZEAAAAASUVORK5CYII=
+  type: StepGroup
+  spec:
+    stageType: CI
+    steps:
+      - step:
+          type: Run
+          name: Build Artifact
+          identifier: Build_Artifact
+          spec:
+            registryRef: account.scoe_images
+            image: <+input>
+            shell: Sh
+            command: |-
+              python -m pip install ".[publish]"
+              python -m build
+              export PACKAGE_WHL=`ls dist/*.whl`
+              pip freeze | grep -v $${APP_MODULE_NAME} > requirements.pip
+              cat requirements.pip
+            envVariables:
+              APP_MODULE_NAME: <+<+stepGroup.variables.FMT_APP_MODULE_NAME>.replace("_","-").replaceAll("/+$", "")>
+            outputVariables:
+              - name: PACKAGE_WHL
+        contextType: StepGroupTemplate
+      - step:
+          type: Test
+          name: Unit Tests
+          identifier: Unit_Tests
+          spec:
+            registryRef: account.scoe_images
+            image: <+input>
+            shell: Sh
+            command: |-
+              echo "Install Dependencies"
+              python -m pip install --constraint requirements.pip "$${PACKAGE_WHL}[dev]"
+              echo "Run Unit Tests"
+              python -m pytest tests/
+            envVariables:
+              APP_MODULE_NAME: <+stepGroup.variables.FMT_APP_MODULE_NAME>
+              PACKAGE_WHL: <+stepGroup.steps.Build_Artifact.output.outputVariables.PACKAGE_WHL>
+            intelligenceMode: true
+      - step:
+          type: Run
+          name: Lint Checks
+          identifier: Lint_Checks
+          spec:
+            registryRef: account.scoe_images
+            image: <+input>
+            shell: Sh
+            command: |-
+              echo "Install Dependencies"
+              python -m pip install --constraint requirements.pip "$${PACKAGE_WHL}[dev]"
+              echo "Run mypy static type checking over the source"
+              python -m mypy src/$${APP_MODULE_NAME}
+              echo "Lint docstrings"
+              python -m ruff check --select D src/$${APP_MODULE_NAME}
+              echo "Pytest docstrings"
+              python -m pytest tests/test_docstrings.py --doctest-modules src/$${APP_MODULE_NAME} -v
+            envVariables:
+              APP_MODULE_NAME: <+stepGroup.variables.FMT_APP_MODULE_NAME>
+              PACKAGE_WHL: <+stepGroup.steps.Build_Artifact.output.outputVariables.PACKAGE_WHL>
+    variables:
+      - name: APP_MODULE_NAME
+        type: String
+        value: <+input>
+        description: ""
+        required: false
+      - name: FMT_APP_MODULE_NAME
+        type: String
+        description: Optional working-directory prefix with trailing slash
+        required: false
+        value: <+!empty(<+stepGroup.variables.APP_MODULE_NAME>) ?'<+stepGroup.variables.APP_MODULE_NAME.replaceAll("/+$", "")>/' :"">

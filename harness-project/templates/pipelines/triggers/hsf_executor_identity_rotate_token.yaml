@@ -1,0 +1,49 @@
+trigger:
+  identifier: ${TRIGGER_IDENTIFIER}
+  name: ${TRIGGER_NAME}
+  orgIdentifier: ${ORGANIZATION_ID}
+  projectIdentifier: ${PROJECT_ID}
+  pipelineIdentifier: ${PIPELINE_IDENTIFIER}
+  description: "${DESCRIPTION}"
+  tags:
+    ${indent(4, TAGS)}
+  enabled: true
+  stagesToExecute: []
+  source:
+    type: Scheduled
+    spec:
+      type: Cron
+      spec:
+        expression: "${CRON_TAB}"
+        type: UNIX
+  inputYaml: |
+    pipeline:
+      identifier: ${PIPELINE_IDENTIFIER}
+      variables:
+        - name: token_owner_type
+          type: String
+          value: SERVICE_ACCOUNT
+        - name: token_owner_ref
+          type: String
+          value: ${TOKEN_OWNER_REF}
+        - name: token_api_key_ref
+          type: String
+          value: ${TOKEN_API_KEY_REF}
+        - name: token_org_id
+          type: String
+          value: ${TOKEN_ORG_ID}
+        - name: token_project_id
+          type: String
+          value: ${TOKEN_PROJECT_ID}
+        - name: secret_id
+          type: String
+          value: ${SECRET_ID}
+        - name: secret_org_id
+          type: String
+          value: ${SECRET_ORG_ID}
+        - name: secret_project_id
+          type: String
+          value: ${SECRET_PROJECT_ID}
+        - name: update_self
+          type: String
+          value: "${UPDATE_SELF}"

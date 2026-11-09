@@ -16,6 +16,9 @@ entities:
       #   modules: # Optional module restriction setting `ci` or `[ci,cd]``
       #   is_default: false # When `false` this Workflow will not be installed except through direct import.
   - org: SCOE
+    workflows:
+      - name: hsf-default-project
+  - org: SCOE
     project: hsf_plugins
     workflows:
       - name: hsf-python-plugin

@@ -1,0 +1,13 @@
+---
+permissions: [
+  # Developer Portal
+  "idp_advancedconfiguration_view",
+  "idp_catalog_view",
+  "idp_catalogaccesspolicy_view",
+  "idp_integration_view",
+  "idp_layout_view",
+  "idp_plugin_view",
+  "idp_scorecard_view",
+  "idp_workflow_execute",
+  "idp_workflow_view",
+]

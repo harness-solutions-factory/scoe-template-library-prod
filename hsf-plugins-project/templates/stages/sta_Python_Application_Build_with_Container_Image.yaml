@@ -1,0 +1,209 @@
+template:
+  identifier: ${TEMPLATE_IDENTIFIER}
+  name: ${TEMPLATE_NAME}
+  %{~ if ORGANIZATION_ID != null ~}
+  orgIdentifier: ${ORGANIZATION_ID}
+  %{~ endif ~}
+  %{~ if PROJECT_ID != null ~}
+  projectIdentifier: ${PROJECT_ID}
+  %{~ endif ~}
+  description: ${TEMPLATE_DESC}
+  versionLabel: ${TEMPLATE_VERSION}
+  tags:
+    ${indent(4, TAGS)}
+  type: Stage
+  spec:
+    type: CI
+    spec:
+      cloneCodebase: true
+      caching:
+        enabled: true
+        override: true
+        paths:
+          - /shared_artifacts/pip_cache
+        key: cache-{{ checksum "pyproject.toml" }}
+      buildIntelligence:
+        enabled: true
+      execution:
+        steps:
+          - stepGroup:
+              name: Code and Secrets Scans
+              identifier: Code_and_Secrets_Scans
+              template:
+                templateRef: Code_Smells_and_Linting
+                versionLabel: v1
+          - stepGroup:
+              name: Prepare and Update Release Documentation
+              identifier: Prepare_and_Update_Release_Documentation
+              template:
+                templateRef: org.CI_Automated_ChangeLog_and_Tag_Management
+                versionLabel: v1
+                templateInputs:
+                  when:
+                    stageStatus: Success
+                    condition: <+stage.variables.IS_A_RELEASE>
+          - stepGroup:
+              name: Build and Test Python Package
+              identifier: Build_and_Test_Python_Package
+              template:
+                templateRef: Python_Build_Test_Publish_to_HAR
+                versionLabel: v1
+                templateInputs:
+                  steps:
+                    - step:
+                        identifier: Build_Artifact
+                        type: Run
+                        spec:
+                          image: <+stage.variables.PYTHON_BASE_IMAGE>
+                    - step:
+                        identifier: Unit_Tests
+                        type: Test
+                        spec:
+                          image: <+stage.variables.PYTHON_BASE_IMAGE>
+                    - step:
+                        identifier: Lint_Checks
+                        type: Run
+                        spec:
+                          image: <+stage.variables.PYTHON_BASE_IMAGE>
+                  variables:
+                    - name: APP_MODULE_NAME
+                      type: String
+                      value: <+stage.variables.PYTHON_MODULE_NAME>
+          - stepGroup:
+              name: Build and Scan Image
+              identifier: Build_and_Scan_Image
+              template:
+                templateRef: Python_Containers_Build_Scan_Publish_to_HAR
+                versionLabel: v1
+                templateInputs:
+                  variables:
+                    - name: RELEASE_TAG
+                      type: String
+                      value: <+!empty(<+exportedVariables.getValue("stage.ai_documentation.GIT_TAG")>) ?<+exportedVariables.getValue("stage.ai_documentation.GIT_TAG")> :"">
+                    - name: SCAN_REPOSITORY
+                      type: String
+                      value: <+stage.variables.DOCKER_SCAN_REPOSITORY>
+                    - name: SCAN_VARIANT
+                      type: String
+                      value: <+!empty(<+stepGroup.variables.RELEASE_TAG>) ?<+stepGroup.variables.RELEASE_TAG> :<+stage.variables.DOCKER_SCAN_VARIANT>>
+                    - name: PUBLISH_REPOSITORY
+                      type: String
+                      value: <+stage.variables.DOCKER_PUBLISH_REPOSITORY>
+                    - name: PUBLISH_TAG
+                      type: String
+                      value: <+!empty(<+stepGroup.variables.RELEASE_TAG>) ?"<+stepGroup.variables.SCAN_VARIANT>,latest" :<+stepGroup.variables.SCAN_VARIANT>>
+                    - name: DOCKERFILE
+                      type: String
+                      value: Dockerfile.CI
+                    - name: PACKAGE_WHL
+                      type: String
+                      value: <+execution.steps.Build_and_Test_Python_Package.steps.Build_Artifact.output.outputVariables.PACKAGE_WHL>
+                    - name: PIP_CACHE_DIR
+                      type: String
+                      value: <+stage.variables.PIP_CACHE_DIR>
+          - stepGroup:
+              name: SCS
+              identifier: SCS
+              template:
+                templateRef: HAR_Supply_Chain_Security
+                versionLabel: v1
+                templateInputs:
+                  variables:
+                    - name: DOCKER_REPOSITORY
+                      type: String
+                      value: <+stage.variables.DOCKER_PUBLISH_REPOSITORY>
+                    - name: RELEASE_TAG
+                      type: String
+                      value: <+!empty(<+exportedVariables.getValue("stage.ai_documentation.GIT_TAG")>) ?<+exportedVariables.getValue("stage.ai_documentation.GIT_TAG")> :"">
+          - step:
+              type: HarUpload
+              name: Upload Python Package to HAR
+              identifier: Upload_Python_Package_to_HAR
+              spec:
+                registryRef: account.scoe
+                packageType: PYTHON
+                sourcePath: /harness/dist/
+              when:
+                stageStatus: Success
+                condition: <+!empty(<+exportedVariables.getValue("stage.ai_documentation.GIT_TAG")>)>
+          - step:
+              type: Run
+              name: Create and Push New Tag
+              identifier: Create_and_Push_New_Tag
+              spec:
+                shell: Sh
+                command: |-
+                  cat <<EOF > $${HOME}/.netrc
+                  machine $${DRONE_NETRC_MACHINE}
+                  login $${DRONE_NETRC_USERNAME}
+                  password $${DRONE_NETRC_PASSWORD}
+                  EOF
+                  chmod 600 $${HOME}/.netrc
+                  git tag $${GIT_TAG}
+                  git push -u origin $${GIT_BRANCH} --tags
+                envVariables:
+                  GIT_TAG: <+exportedVariables.getValue("stage.ai_documentation.GIT_TAG")>
+                  GIT_BRANCH: <+codebase.branch>
+              when:
+                stageStatus: Success
+                condition: <+!empty(<+exportedVariables.getValue("stage.ai_documentation.GIT_TAG")>)>
+      sharedPaths:
+        - /shared_artifacts/pip_cache
+        - /shared_artifacts/python_modules
+      platform:
+        os: Linux
+        arch: Amd64
+      runtime:
+        type: Cloud
+        spec: {}
+    variables:
+      - name: IS_A_RELEASE
+        type: String
+        description: Default Python Base Image
+        required: true
+        value: <+<+empty(<+codebase.prNumber>)> ?<+codebase.branch>=="main" :false>
+      - name: PYTHON_BASE_IMAGE
+        type: String
+        description: Default Python Base Image
+        required: true
+        value: <+input>.default(dockerhub/python:3.14.7-alpine)
+      - name: PIP_CACHE_DIR
+        type: String
+        description: Default Pip Cache Location
+        required: true
+        value: /shared_artifacts/pip_cache
+      - name: PYTHONPATH
+        type: String
+        description: Shared Python Module Installation Path
+        required: true
+        value: /shared_artifacts/python_modules
+      - name: PACKAGE_NAME
+        type: String
+        description: Provide the name of the Python Module created as part of this execution
+        required: true
+        value: <+input>
+      - name: PYTHON_MODULE_NAME
+        type: String
+        description: Provide the name of the Python Module created as part of this execution
+        required: true
+        value: <+input>
+      - name: DOCKER_SCAN_REPOSITORY
+        type: String
+        description: The name of the repo. Use the format <hub-user>/<repo-name>.
+        required: true
+        value: <+input>
+      - name: DOCKER_PUBLISH_REPOSITORY
+        type: String
+        description: The name of the repo to which to publish. Use the format <hub-user>/<repo-name>.
+        required: true
+        value: <+input>
+      - name: DOCKER_SCAN_VARIANT
+        type: String
+        description: Specify the SCAN_VARIANT Tag for the Docker Image
+        required: true
+        value: <+codebase.shortCommitSha>
+      - name: GITLEAKS_CONFIG
+        type: String
+        description: Specify the Published Tag for the Docker Image
+        required: true
+        value: /harness/.gitleaks.toml
