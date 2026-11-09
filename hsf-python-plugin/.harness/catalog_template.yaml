@@ -1,0 +1,219 @@
+apiVersion: harness.io/v1
+kind: Workflow
+identifier: hsf_python_plugin
+name: Onboard new HSF Python Plugin
+orgIdentifier: SCOE
+projectIdentifier: hsf_plugins
+owner: group:default/harness_account_all_users # Defaults to all users
+type: harness_factory
+metadata:
+  description: Onboard a new Harness Python Plugin
+  tags:
+    - solutions-factory
+    - harness
+    - ci
+    - python
+    - hsf_plugins
+spec:
+  presentation:
+    customTitle: Onboard a new HSF Python Plugin
+    customSubTitle: Configure and deploy a new Harness CI pipeline with HCR repository and Security Scans
+    customCreateButtonText: Onboard my new application
+  parameters:
+    - title: Pipeline Configuration
+      required:
+        - organization_id
+        - project_id
+        - repository_name
+      properties:
+        organization_id:
+          title: Organization ID
+          type: string
+          description: Harness Organization where the pipeline will be created
+          default: SCOE
+          ui:readonly: "true"
+        project_id:
+          title: Select the Harness Project into which the pipeline will be deployed
+          type: string
+          description: Harness Project where the pipeline will be created
+          default: hsf_plugins
+          ui:readonly: "true"
+        repository_name:
+          title: Provide the new Plugin Repository Name
+          type: string
+          description: This value will be used as the Repository, Pipeline, and Container Image name
+          pattern: '^([a-zA-Z][-a-zA-Z0-9]*)$'
+          maxLength: 128
+        repository_description:
+          title: Provide the new Plugin Description
+          type: string
+          description: Optional, customize the default repository description
+          default: An HSF Python Plugin repository
+        token:
+          title: Harness Token
+          type: string
+          ui:widget: password
+          ui:field: HarnessAuthToken
+    - title: Solutions Factory Connection
+      properties:
+        solutions_factory_details:
+          title: Solutions Factory Details
+          type: object
+          description: |
+            ---
+            Harness URL : <+variable.account.solutions_factory_endpoint>
+
+            Harness Account : <+account.identifier>
+
+            Solutions Factory Org : <+variable.account.solutions_factory_org>
+
+            Solutions Factory Project : <+variable.account.solutions_factory_project>
+          required:
+            - harness_account_url
+            - harness_account_id
+            - harness_org_id
+            - harness_project_id
+            - template_library_connector
+            - template_library_repo
+            - template_library_branch
+            - template_library_directory # If template is at the root of the directory, then comment this out.
+          properties:
+            harness_account_url:
+              type: string
+              default: <+variable.account.solutions_factory_endpoint>
+              ui:widget: hidden
+            harness_account_id:
+              type: string
+              default: <+account.identifier>
+              ui:widget: hidden
+            harness_org_id:
+              type: string
+              default: <+variable.account.solutions_factory_org>
+              ui:widget: hidden
+            harness_project_id:
+              type: string
+              default: <+variable.account.solutions_factory_project>
+              ui:widget: hidden
+            template_library_connector:
+              type: string
+              default: org.scoe_template_library_connector
+              ui:widget: hidden
+            template_library_repo:
+              type: string
+              default: https://github.com/harness-solutions-factory/scoe-template-library-prod.git
+              ui:widget: hidden
+            template_library_branch:
+              type: string
+              default: main
+              ui:widget: hidden
+            template_library_directory:
+              type: string
+              default: hsf-python-plugin
+              ui:widget: hidden
+        solutions_factory_opts:
+          title: Solutions Factory Workflow Options
+          type: object
+          required:
+            - repo_source
+            - workspace_type
+          properties:
+            repo_source:
+              type: string
+              # Used to group by source the workspaces for bulk actions
+              default: "custom"
+              ui:widget: hidden
+            workspace_type:
+              type: string
+              # Used to group by type the workspaces for bulk actions
+              default: hsf-python-plugin
+              ui:widget: hidden
+            is_ephemeral:
+              type: string
+              # Determines if the workflow will trigger a temporary workspace that is
+              # deleted upon completion. Resources will be preserved
+              # Must be "true" or "false" and wrapped in quotes
+              default: "false"
+              ui:widget: hidden
+            requires_approval:
+              type: string
+              # Determines if the workflow will require an Approval before executing
+              # Must be "true" or "false" and wrapped in quotes
+              default: "false"
+              ui:widget: hidden
+            use_mini_factory:
+              type: string
+              # "When enabled, IDP workflows will default to leveraging the mini-factory to distribute workloads
+              # Value must be controlled through variable
+              default: <+variable.account.enable_hsf_mini_factory>
+              ui:widget: hidden
+  steps:
+    - id: configure_workspace
+      name: Configuring Harness Workspace
+      action: trigger:harness-custom-pipeline
+      input:
+        url: ${{ parameters.solutions_factory_details.harness_account_url }}/ng/account/${{ parameters.solutions_factory_details.harness_account_id }}/all/orgs/${{ parameters.solutions_factory_details.harness_org_id }}/projects/${{ "hws_" if parameters.solutions_factory_opts.use_mini_factory=="true" else "" }}${{ parameters.organization_id if parameters.solutions_factory_opts.use_mini_factory=="true" else parameters.solutions_factory_details.harness_project_id }}/pipelines/Create_and_Manage_IACM_Workspaces/pipeline-studio?storeType=INLINE
+        inputset:
+          GIT_REPOSITORY_CONNECTOR: ${{ parameters.solutions_factory_details.template_library_connector }}
+          GIT_REPOSITORY_NAME: ${{ parameters.solutions_factory_details.template_library_repo }}
+          GIT_REPOSITORY_BRANCH: ${{ parameters.solutions_factory_details.template_library_branch }}
+          GIT_REPOSITORY_PATH: ${{ parameters.solutions_factory_details.template_library_directory }}
+          # The RESOURCE_NAME must be unique for each workspace created.
+          RESOURCE_NAME: ${{ parameters.organization_id }}_${{ parameters.project_name|replace(" ","-")|replace("-", "_") }}
+          RESOURCE_OWNER: group:default/harness_account_all_users
+          # YAML of Terraform variables of type 'String' mapped to their IDP parameters
+          RESOURCE_VARS:
+            harness_platform_account: ${{ parameters.solutions_factory_details.harness_account_id }}
+            organization_id: ${{ parameters.organization_id }}
+            project_id: ${{ parameters.project_id }}
+            pipeline_id: ${{ parameters.pipeline_id|replace(" ","-")|replace("-", "_") }}
+            pipeline_name: ${{ parameters.repository_name }}
+            repository_name: ${{ parameters.repository_name }}
+            repository_description: ${{ parameters.repository_description }}
+          # YAML of Terraform variables of type 'Secret' Reference mapped to their IDP parameters
+          RESOURCE_VARS_SECRETS: {}
+          # YAML of Environment variables of type 'String' mapped to their IDP parameters
+          RESOURCE_VARS_ENVS: {}
+          # YAML of Environment variables of type 'Secret' Reference mapped to their IDP parameters
+          RESOURCE_VARS_ENVS_SECRET: {}
+          # Should the workspace automatically include the default Harness Connector environment variables
+          INCLUDE_HARNESS_ENVS: "true"
+          WORKSPACE_TAGS:
+            source: ${{ parameters.solutions_factory_opts.repo_source }}
+            type: ${{ parameters.solutions_factory_opts.workspace_type }}
+          IS_EPHEMERAL: ${{ parameters.solutions_factory_opts.is_ephemeral }}
+          REQUIRES_APPROVAL: ${{ parameters.solutions_factory_opts.requires_approval }}
+        apikey: ${{ parameters.token }}
+        showOutputVariables: true
+  output:
+    links:
+      - title: Next - Review Repository
+        url: ${{ steps.configure_workspace.output['pipeline.stages.Provision.spec.execution.steps.Provision.steps.apply.output.outputVariables.git_repository_url']}}
+      - title: Next - Review Pipeline
+        url: ${{ steps.configure_workspace.output['pipeline.stages.Provision.spec.execution.steps.Provision.steps.apply.output.outputVariables.pipeline_url']}}
+    text:
+      - title: Pipeline Created Successfully
+        content: |
+          🎉 **HSF Python Plugin Onboard Successfully!**
+
+          Your new Repository and CI pipeline have been created using the HSF Python Plugin Standard templates.
+
+          **Pipeline Details:**
+          - **Name**: ${{ parameters.repository_name }}
+          - **Organization**: ${{ parameters.organization_id }}
+          - **Project**: ${{ parameters.project_id }}
+          - **Repository Clone Path**: ${{ steps.configure_workspace.output['pipeline.stages.Provision.spec.execution.steps.Provision.steps.apply.output.outputVariables.git_repository_url'] }}
+
+          **What's Included:**
+          - ✅ Code smells and linting checks
+          - ✅ Python Unit Test and Package creation
+          - ✅ Container image build and security scanning
+          - ✅ Supply chain security validation (If enabled by platform team)
+          - ✅ Full compliment of Harness Code Repository integrated Harness Pipeline triggers
+
+          **Next Steps:**
+          1. Pull the repository locally and begin building your new application
+          2. Configure any repository-specific settings
+          3. Set up or enable triggers as needed (_Note: The triggers created by this process will be configured and enabled by default._)
+          3. Run your first pipeline execution
+
+          Your pipeline is ready to use with all the HSF Team best practices!

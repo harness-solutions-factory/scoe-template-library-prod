@@ -14,6 +14,7 @@ PROJECT_DIR = "{{cwd}}"
 WORKDIR = "/project"
 RESOURCE = ""
 TEMPLATE_DIR = ""
+_.file = "{{config_root}}/.env"
 
 [tasks.help]
 description = "Show available tasks"

@@ -5,13 +5,17 @@
 # -------
 annotations:
   # Annotations and tags added to the IDP Workflows.
-  source: harness-template-library
+  source: scoe-template-library
   created_by: Harness
 entities:
   # Optional Scoping Keys . Note: without these, the workflow will be registered to the Account-level
   # org: Workflows listed will be registered to the specific Organization. Must exist before registration
   # project: Workflows listed will be registered to the specific Project. Requires an `org`. Must exist before registration
-  - workflows: []
+  - workflows:
       # - name: my_template
       #   modules: # Optional module restriction setting `ci` or `[ci,cd]``
       #   is_default: false # When `false` this Workflow will not be installed except through direct import.
+  - org: SCOE
+    project: hsf_plugins
+    workflows:
+      - name: hsf-python-plugin

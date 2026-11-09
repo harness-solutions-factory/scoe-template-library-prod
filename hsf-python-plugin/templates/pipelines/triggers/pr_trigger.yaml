@@ -1,0 +1,35 @@
+trigger:
+  identifier: ${TRIGGER_IDENTIFIER}
+  name: ${TRIGGER_NAME}
+  orgIdentifier: ${ORGANIZATION_ID}
+  projectIdentifier: ${PROJECT_ID}
+  pipelineIdentifier: ${PIPELINE_IDENTIFIER}
+  description: "${DESCRIPTION}"
+  tags:
+    ${indent(4, TAGS)}
+  enabled: true
+  stagesToExecute: []
+  source:
+    type: Webhook
+    spec:
+      type: Harness
+      spec:
+        type: PullRequest
+        spec:
+          autoAbortPreviousExecutions: false
+          payloadConditions: []
+          headerConditions: []
+          repoName: ${REPOSITORY_NAME}
+          actions:
+            - Create
+            - Reopen
+  inputYaml: |
+    pipeline:
+      identifier: ${PIPELINE_IDENTIFIER}
+      properties:
+        ci:
+          codebase:
+            build:
+              type: PR
+              spec:
+                number: <+trigger.prNumber>
