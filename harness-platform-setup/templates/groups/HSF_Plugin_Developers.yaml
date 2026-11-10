@@ -1,0 +1,6 @@
+---
+tags:
+  purpose: HSF_Plugin_Development_Access
+role_bindings:
+  - role: _account_viewer
+    resource_group: _all_account_level_resources
