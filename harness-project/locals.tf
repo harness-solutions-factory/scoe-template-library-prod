@@ -31,4 +31,12 @@ locals {
   )
 
   source_directory = "${path.module}/templates"
+
+  organization_id = data.harness_platform_organization.selected.id
+  project_id = harness_platform_project.selected.id
+
+  project_scope_ref = lower(join("_",[
+    data.harness_platform_organization.selected.id,
+    harness_platform_project.selected.id
+  ]))
 }

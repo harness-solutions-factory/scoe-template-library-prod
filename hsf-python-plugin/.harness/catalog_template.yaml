@@ -132,7 +132,7 @@ spec:
               # Determines if the workflow will trigger a temporary workspace that is
               # deleted upon completion. Resources will be preserved
               # Must be "true" or "false" and wrapped in quotes
-              default: "false"
+              default: "true"
               ui:widget: hidden
             requires_approval:
               type: string
@@ -158,14 +158,14 @@ spec:
           GIT_REPOSITORY_BRANCH: ${{ parameters.solutions_factory_details.template_library_branch }}
           GIT_REPOSITORY_PATH: ${{ parameters.solutions_factory_details.template_library_directory }}
           # The RESOURCE_NAME must be unique for each workspace created.
-          RESOURCE_NAME: ${{ parameters.organization_id }}_${{ parameters.project_name|replace(" ","-")|replace("-", "_") }}
+          RESOURCE_NAME: ${{ parameters.organization_id }}_${{ parameters.project_id }}_${{ parameters.repository_name|replace(" ","-")|replace("-", "_")  }}
           RESOURCE_OWNER: group:default/harness_account_all_users
           # YAML of Terraform variables of type 'String' mapped to their IDP parameters
           RESOURCE_VARS:
             harness_platform_account: ${{ parameters.solutions_factory_details.harness_account_id }}
             organization_id: ${{ parameters.organization_id }}
             project_id: ${{ parameters.project_id }}
-            pipeline_id: ${{ parameters.pipeline_id|replace(" ","-")|replace("-", "_") }}
+            pipeline_id: ${{ parameters.repository_name|replace(" ","-")|replace("-", "_") }}
             pipeline_name: ${{ parameters.repository_name }}
             repository_name: ${{ parameters.repository_name }}
             repository_description: ${{ parameters.repository_description }}

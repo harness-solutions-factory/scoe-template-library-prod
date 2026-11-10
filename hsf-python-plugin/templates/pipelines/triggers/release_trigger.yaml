@@ -16,7 +16,7 @@ trigger:
       spec:
         type: Push
         spec:
-          autoAbortPreviousExecutions: false
+          autoAbortPreviousExecutions: true
           payloadConditions:
             - key: targetBranch
               operator: Equals

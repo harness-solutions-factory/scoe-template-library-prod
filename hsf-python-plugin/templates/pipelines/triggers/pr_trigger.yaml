@@ -16,7 +16,7 @@ trigger:
       spec:
         type: PullRequest
         spec:
-          autoAbortPreviousExecutions: false
+          autoAbortPreviousExecutions: true
           payloadConditions: []
           headerConditions: []
           repoName: ${REPOSITORY_NAME}
