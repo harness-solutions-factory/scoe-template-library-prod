@@ -1,4 +1,5 @@
 # === Terraform ===
+**/imports.tf
 
 # Local Terraform directories
 **/.terraform/
