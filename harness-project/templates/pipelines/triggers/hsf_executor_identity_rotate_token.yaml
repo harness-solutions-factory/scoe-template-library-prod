@@ -29,21 +29,29 @@ trigger:
         - name: token_api_key_ref
           type: String
           value: ${TOKEN_API_KEY_REF}
+        %{~ if TOKEN_ORG_ID != "skipped" ~}
         - name: token_org_id
           type: String
           value: ${TOKEN_ORG_ID}
+        %{~ endif ~}
+        %{~ if TOKEN_PROJECT_ID != "skipped" ~}
         - name: token_project_id
           type: String
           value: ${TOKEN_PROJECT_ID}
+        %{~ endif ~}
         - name: secret_id
           type: String
           value: ${SECRET_ID}
+        %{~ if SECRET_ORG_ID != "skipped" ~}
         - name: secret_org_id
           type: String
           value: ${SECRET_ORG_ID}
+        %{~ endif ~}
+        %{~ if SECRET_PROJECT_ID != "skipped" ~}
         - name: secret_project_id
           type: String
           value: ${SECRET_PROJECT_ID}
+        %{~ endif ~}
         - name: update_self
           type: String
           value: "${UPDATE_SELF}"
