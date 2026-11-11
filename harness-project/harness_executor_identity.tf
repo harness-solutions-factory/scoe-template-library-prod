@@ -180,11 +180,11 @@ resource "harness_platform_triggers" "hsf_executor_identity_rotate_token" {
 
       TOKEN_OWNER_REF : harness_platform_apikey.hsf_executor_identity_api_key.parent_id
       TOKEN_API_KEY_REF : harness_platform_apikey.hsf_executor_identity_api_key.id
-      TOKEN_ORG_ID : harness_platform_apikey.hsf_executor_identity_api_key.org_id
-      TOKEN_PROJECT_ID : harness_platform_apikey.hsf_executor_identity_api_key.project_id
+      TOKEN_ORG_ID : coalesce(harness_platform_apikey.hsf_executor_identity_api_key.org_id, "skipped")
+      TOKEN_PROJECT_ID : coalesce(harness_platform_apikey.hsf_executor_identity_api_key.project_id, "skipped")
       SECRET_ID : harness_platform_secret_text.harness_platform_key.id
-      SECRET_ORG_ID : harness_platform_secret_text.harness_platform_key.org_id
-      SECRET_PROJECT_ID : harness_platform_secret_text.harness_platform_key.project_id
+      SECRET_ORG_ID : coalesce(harness_platform_secret_text.harness_platform_key.org_id, "skipped")
+      SECRET_PROJECT_ID : coalesce(harness_platform_secret_text.harness_platform_key.project_id, "skipped")
       UPDATE_SELF : "false"
 
       TAGS : yamlencode(local.common_tags)
