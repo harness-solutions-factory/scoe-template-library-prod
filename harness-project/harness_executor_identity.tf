@@ -123,7 +123,7 @@ resource "harness_platform_role_assignments" "hsf_executor_identity__org_role_as
     for role_name in local.org_executor_roles : role_name => role_name
   }
   identifier                = "${harness_platform_service_account.hsf_executor_identity.id}_org_${each.value}"
-  resource_group_identifier = "scoe_hsf_executor_identity"
+  resource_group_identifier = "${lower(local.organization_id)}_hsf_executor_identity"
   role_identifier           = each.value
   principal {
     identifier = harness_platform_service_account.hsf_executor_identity.id
