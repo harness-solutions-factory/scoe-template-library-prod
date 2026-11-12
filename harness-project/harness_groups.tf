@@ -1,16 +1,50 @@
 locals {
-  groups_files_path = "${local.source_directory}/groups"
+  local_groups = flatten([
+    for resource_file in fileset("${local.source_directory}/groups/", "*.yaml") : [
+      merge(
+        yamldecode(file("${local.source_directory}/groups/${resource_file}")),
+        {
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+        }
+      )
+    ]
+  ])
 
-  group_files = fileset("${local.groups_files_path}/", "*.yaml")
+  additional_groups = (
+    var.additional_templates != null
+    ?
+    flatten([
+    for resource_file in fileset("${var.additional_templates}/groups/", "*.yaml") : [
+      merge(
+        yamldecode(file("${var.additional_templates}/groups/${resource_file}")),
+        {
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+        }
+      )
+    ]
+    ])
+    :
+    []
+  )
 
+  empty_notification_config = {
+    slack     = {}
+    msteams   = {}
+    pagerduty = {}
+    email     = {}
+  }
 
   all_groups = flatten([
-    for group_file in local.group_files : [
+    for group_details in flatten([local.local_groups, local.additional_groups]) : [
       merge(
-        yamldecode(file("${local.groups_files_path}/${group_file}")),
+        group_details,
         {
-          identifier = replace(replace(replace(group_file, ".yaml", ""), " ", "_"), "-", "_")
-          name       = replace(replace(replace(group_file, ".yaml", ""), "-", "_"), "_", " ")
+          notification_configs = {
+            for type in ["slack", "msteams", "pagerduty", "email"] :
+            type => try(coalesce(var.group_notifications[group_details.identifier][type]), {})
+          }
         }
       )
     ]
@@ -107,7 +141,7 @@ resource "harness_platform_usergroup" "usergroup" {
       linked_sso_id,
       linked_sso_display_name,
       linked_sso_type,
-      notification_configs,
+      # notification_configs,
       sso_linked,
       sso_group_id,
       sso_group_name
@@ -131,6 +165,36 @@ resource "harness_platform_usergroup" "usergroup" {
   sso_linked              = lookup(each.value, "sso_group_id", null) != null ? true : false
   sso_group_id            = lookup(each.value, "sso_group_id", null)
   sso_group_name          = lookup(each.value, "sso_group_id", null)
+
+  dynamic "notification_configs" {
+    for_each = lookup(lookup(each.value, "notification_configs", {}), "slack", {}) != {} ? [lookup(lookup(each.value, "notification_configs", {}), "slack", "")] : []
+    content {
+      type              = "SLACK"
+      slack_webhook_url = lookup(notification_configs.value, "webhook", "MISSING-WEBHOOK")
+    }
+  }
+  dynamic "notification_configs" {
+    for_each = lookup(lookup(each.value, "notification_configs", {}), "msteams", {}) != {} ? [lookup(lookup(each.value, "notification_configs", {}), "msteams", {})] : []
+    content {
+      type                        = "MSTEAMS"
+      microsoft_teams_webhook_url = lookup(notification_configs.value, "webhook", "MISSING-WEBHOOK")
+    }
+  }
+  dynamic "notification_configs" {
+    for_each = lookup(lookup(each.value, "notification_configs", {}), "pagerduty", {}) != {} ? [lookup(lookup(each.value, "notification_configs", {}), "pagerduty", {})] : []
+    content {
+      type           = "PAGERDUTY"
+      pager_duty_key = lookup(notification_configs.value, "key", "MISSING-KEY")
+    }
+  }
+  dynamic "notification_configs" {
+    for_each = lookup(lookup(each.value, "notification_configs", {}), "email", {}) != {} ? [lookup(lookup(each.value, "notification_configs", {}), "email", {})] : []
+    content {
+      type                    = "EMAIL"
+      group_email             = join(",",lookup(notification_configs.value, "group_email", []))
+      send_email_to_all_users = lookup(notification_configs.value, "email_all", false)
+    }
+  }
 
   tags = flatten([
     [for k, v in lookup(each.value, "tags", {}) : "${k}:${v}"],

@@ -1,20 +1,37 @@
 locals {
-
-  environments_files_path = "${local.source_directory}/environments"
-
-  environment_files = fileset("${local.environments_files_path}/", "*.yaml")
-
-
-  environments = flatten([
-    for environment_file in local.environment_files : [
+  local_environments = flatten([
+    for resource_file in fileset("${local.source_directory}/environments/", "*.yaml") : [
       merge(
-        yamldecode(file("${local.environments_files_path}/${environment_file}")),
+        yamldecode(file("${local.source_directory}/environments/${resource_file}")),
         {
-          identifier = replace(replace(replace(environment_file, ".yaml", ""), " ", "_"), "-", "_")
-          name       = replace(environment_file, ".yaml", "")
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
         }
       )
     ]
+  ])
+
+  additional_environments = (
+    var.additional_templates != null
+    ?
+    flatten([
+    for resource_file in fileset("${var.additional_templates}/environments/", "*.yaml") : [
+      merge(
+        yamldecode(file("${var.additional_templates}/environments/${resource_file}")),
+        {
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+        }
+      )
+    ]
+    ])
+    :
+    []
+  )
+
+  environments = flatten([
+    local.local_environments,
+    local.additional_environments
   ])
 
   environments_bindings = flatten([

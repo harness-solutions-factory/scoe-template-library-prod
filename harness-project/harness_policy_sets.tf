@@ -1,24 +1,43 @@
 locals {
-  policy_sets_files_path = "${local.source_directory}/policy_sets"
-
-  policy_sets_files = fileset("${local.policy_sets_files_path}/", "*.yaml")
-
-  policy_sets = flatten([
-    for policy_file in local.policy_sets_files : [
+  local_policy_sets = flatten([
+    for resource_file in fileset("${local.source_directory}/policy_sets/", "*.yaml") : [
       merge(
-        yamldecode(file("${local.policy_sets_files_path}/${policy_file}")),
+        yamldecode(file("${local.source_directory}/policy_sets/${resource_file}")),
         {
-          identifier = replace(replace(replace(policy_file, ".yaml", ""), " ", "_"), "-", "_")
-          name       = replace(replace(replace(policy_file, ".yaml", ""), "-", "_"), "_", " ")
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
         }
       )
     ]
+  ])
+
+  additional_policy_sets = (
+    var.additional_templates != null
+    ?
+    flatten([
+    for resource_file in fileset("${var.additional_templates}/policy_sets/", "*.yaml") : [
+      merge(
+        yamldecode(file("${var.additional_templates}/policy_sets/${resource_file}")),
+        {
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+        }
+      )
+    ]
+    ])
+    :
+    []
+  )
+
+  all_policy_sets = flatten([
+    local.local_policy_sets,
+    local.additional_policy_sets
   ])
 }
 resource "harness_platform_policyset" "policy_sets" {
   depends_on = [harness_time_sleep.project_setup]
   for_each = {
-    for policy_set in local.policy_sets : policy_set.name => policy_set
+    for policy_set in local.all_policy_sets : policy_set.identifier => policy_set
   }
   # Lifecycle hook to prevent errors in planning due to missing variables
   lifecycle {
@@ -51,7 +70,7 @@ resource "harness_platform_policyset" "policy_sets" {
   enabled    = lookup(each.value, "enabled", true)
 
   dynamic "policy_references" {
-    for_each = lookup(each.value, "policies", [])
+    for_each = lookup(each.value, "policy_sets", [])
     content {
       identifier = policy_references.value["identifier"]
       severity   = lookup(policy_references.value, "severity", "error")

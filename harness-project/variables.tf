@@ -37,3 +37,23 @@ variable "tags" {
   description = "[Optional] Provide a Map of Tags to associate with the resources"
   default     = {}
 }
+
+variable "additional_templates" {
+  type        = string
+  description = "Provide an absolute path to an additional template directory"
+  default     = null
+}
+
+variable "group_notifications" {
+  type = map(object({
+    slack     = optional(object({ webhook = string }))
+    msteams   = optional(object({ webhook = string }))
+    pagerduty = optional(object({ key = string }))
+    email     = optional(object({
+      group_email = optional(list(string), [])
+      email_all   = bool
+    }))
+  }))
+  description = "Provide a map where each key is the 'group.identifer' and the value is a map of keys"
+  default = {}
+}

@@ -10,7 +10,7 @@ resource "harness_platform_service_account" "hsf_executor_identity" {
   email       = "${local.project_scope_ref}_hsf_executor_identity@service.harness.io"
   description = "Default pipeline executor identity for the Project ${local.project_id} in Organization ${local.organization_id}"
   account_id  = var.harness_platform_account
-  tags = local.common_tags_tuple
+  tags        = local.common_tags_tuple
 }
 
 // Create API key container in master service account
@@ -41,7 +41,7 @@ resource "harness_platform_token" "hsf_executor_identity_token" {
 
 // Store master service account token as a project-level secret (unmanaged to allow customer control)
 resource "harness_platform_secret_text" "harness_platform_key" {
-  depends_on = [harness_time_sleep.project_setup]
+  depends_on  = [harness_time_sleep.project_setup]
   identifier  = "hsf_executor_identity_api_key"
   name        = "HSF Executor API Key"
   description = "Harness Executor API Key"
@@ -78,7 +78,7 @@ resource "harness_platform_resource_group" "hsf_executor_identity_resource_group
   included_scopes {
     filter     = "EXCLUDING_CHILD_SCOPES"
     account_id = var.harness_platform_account
-    org_id = local.organization_id
+    org_id     = local.organization_id
     project_id = local.project_id
   }
   resource_filter {
@@ -110,8 +110,8 @@ resource "harness_platform_role_assignments" "hsf_executor_identity__account_rol
   resource_group_identifier = "_all_account_level_resources"
   role_identifier           = each.value
   principal {
-    identifier = harness_platform_service_account.hsf_executor_identity.id
-    type       = "SERVICE_ACCOUNT"
+    identifier  = harness_platform_service_account.hsf_executor_identity.id
+    type        = "SERVICE_ACCOUNT"
     scope_level = "account"
   }
   disabled = false
@@ -126,8 +126,8 @@ resource "harness_platform_role_assignments" "hsf_executor_identity__org_role_as
   resource_group_identifier = "${lower(local.organization_id)}_hsf_executor_identity"
   role_identifier           = each.value
   principal {
-    identifier = harness_platform_service_account.hsf_executor_identity.id
-    type       = "SERVICE_ACCOUNT"
+    identifier  = harness_platform_service_account.hsf_executor_identity.id
+    type        = "SERVICE_ACCOUNT"
     scope_level = "account"
   }
   disabled = false
@@ -142,8 +142,8 @@ resource "harness_platform_role_assignments" "hsf_executor_identity_project_role
   resource_group_identifier = harness_platform_resource_group.hsf_executor_identity_resource_group.id
   role_identifier           = each.value
   principal {
-    identifier = harness_platform_service_account.hsf_executor_identity.id
-    type       = "SERVICE_ACCOUNT"
+    identifier  = harness_platform_service_account.hsf_executor_identity.id
+    type        = "SERVICE_ACCOUNT"
     scope_level = "account"
   }
   disabled = false

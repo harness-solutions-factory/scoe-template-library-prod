@@ -1,17 +1,37 @@
 locals {
-  policies_files_path = "${local.source_directory}/policies"
-
-  policy_files = fileset("${local.policies_files_path}/", "*.rego")
-
-
-  policies = flatten([
-    for policy_file in local.policy_files : [
-      {
-        identifier = replace(replace(replace(policy_file, ".rego", ""), " ", "_"), "-", "_")
-        name       = replace(replace(replace(policy_file, ".rego", ""), "-", "_"), "_", " ")
-        payload    = file("${local.policies_files_path}/${policy_file}")
-      }
+  local_policies = flatten([
+    for resource_file in fileset("${local.source_directory}/policies/", "*.yaml") : [
+      merge(
+        yamldecode(file("${local.source_directory}/policies/${resource_file}")),
+        {
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+        }
+      )
     ]
+  ])
+
+  additional_policies = (
+    var.additional_templates != null
+    ?
+    flatten([
+    for resource_file in fileset("${var.additional_templates}/policies/", "*.yaml") : [
+      merge(
+        yamldecode(file("${var.additional_templates}/policies/${resource_file}")),
+        {
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+        }
+      )
+    ]
+    ])
+    :
+    []
+  )
+
+  all_policies = flatten([
+    local.local_policies,
+    local.additional_policies
   ])
 }
 
@@ -31,7 +51,7 @@ resource "harness_platform_policy" "policies" {
     ]
   }
   for_each = {
-    for policy in local.policies : policy.name => policy
+    for policy in local.all_policies : policy.identifier => policy
   }
   identifier  = each.value.identifier
   name        = each.value.name
