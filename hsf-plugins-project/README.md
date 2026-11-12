@@ -8,9 +8,10 @@ The Harness Plugins Project template is an advanced Terraform template for creat
 
 - New Harness Project
 - New standard RBAC configurations:
-    - Harness Groups with optional SSO mapping
+    - Harness Groups with optional SSO mapping (including Code Reviewers group)
     - Harness RBAC Roles and Resource Group
     - Harness RBAC Bindings
+    - Role templates with multiple permission sets (AI SRE, Administrative Functions, Artifact Registry, Chaos, Cloud Development Environments, Continuous Error Tracking, Database DevOps, Developer Portal, Discovery, and more)
 - New Harness Environments
     - Dev
     - Test
@@ -19,6 +20,8 @@ The Harness Plugins Project template is an advanced Terraform template for creat
     - Harness Policies with templates
     - Harness Policy Sets
 - Connectors, Stages, Step Groups, and Resource Groups (via templates)
+- Secrets Management
+    - Harness secret configurations and management
 
 
 ## Providers

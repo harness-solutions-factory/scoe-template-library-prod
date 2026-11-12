@@ -1,4 +1,12 @@
 ---
+# Harness Role Example file
+#
+# When creating a new Harness Role, the following is used:
+# - name = The name of this file. Hyphens and underscores are converted into spaces
+# - identifier = The name of this file. Hyphens and spaces are converted into underscores
+# - permissions = The list of permissions this role should support
+#
+# Detailed Permissions list is found in the sub-directory - `permission_sets`
 permissions: [
   # Infrastructure As Code
   "iac_inventory_approve",
@@ -13,7 +21,6 @@ permissions: [
   "iac_playbook_edit",
   "iac_playbook_editvariable",
   "iac_playbook_view",
-  "iac_providerregistry_view",
   "iac_registry_view",
   "iac_variableset_delete",
   "iac_variableset_edit",

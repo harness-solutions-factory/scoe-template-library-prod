@@ -15,6 +15,13 @@ The Harness Project Onboarding template is designed to create and manage Harness
     - Dev
     - Test
     - Prod
+- Pipeline Executor Service Account
+    - Automated service account creation for pipeline execution
+    - API key and token management with rotation automation
+    - Project-scoped resource groups and role assignments
+    - Multi-level role assignments (Account, Organization, Project)
+- Harness Policies and Policy Sets
+    - Policy configuration for governance and compliance
 
 
 ## Providers

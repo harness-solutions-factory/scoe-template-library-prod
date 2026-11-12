@@ -10,8 +10,10 @@ module "harness_project" {
   project_name        = var.project_name
   project_description = var.project_description
 
+  additional_templates = abspath(local.source_directory)
+
+  group_notifications = var.group_notifications
+
   tags = var.tags
 
 }
-
-data "harness_platform_permissions" "current" {}

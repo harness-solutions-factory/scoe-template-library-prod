@@ -8,5 +8,7 @@
 #
 # Detailed Permissions list is found in the sub-directory - `permission_sets`
 permissions: [
-  "ai_llmgateway_access"
+ "iac_variableset_view",
+ "iac_workspace_approve",
+ "iac_workspace_view",
 ]

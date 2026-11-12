@@ -10,11 +10,12 @@ This workflow will establish a few baseline standards for your Harness Account. 
 - Shared Resource Access role granting 'access' privileges to account level shared resources
 - Harness Account Admins user group with _account_admin role binding
 - All Account Users group will be updated to include the new role binding with Shared Resource Access
+- Organization-level user groups for role segregation (HSF_Lab_Infrastructure_Users, and others)
 - Two new Harness OPA governance policies and policy_sets will be included and enforced
     - Enforce Template Version Schema: The policy requires that all Harness Templates have a version starting with a 'v' followed by a whole number.
     - Enforce Harness API Token Age: This policy will enforce that all Harness API Tokens created will adhere to a strict max age policy (30days).
 - Extra example OPA policies for common enforcement activities will also be included in the [examples/](./templates/policies/examples/) directory.  These are starting points that should be copied into the main [policies/](./templates/policies/examples/) directory, and customized to fit your needs.
-  - Enforce Allowed Connector Types:  This policy will allow you to limit the connector types users are alloewd to create, with an exception path for admin users/groups.
+  - Enforce Allowed Connector Types:  This policy will allow you to limit the connector types users are allowed to create, with an exception path for admin users/groups.
   - Deny Shell Script Steps: This policy can be used to deny any steps of the type `ShellScript`, to prevent delegate based Shell Script steps from being included in pipeline configurations.
   - Require Source Image Repo:  This policy can be used to require that images used in a `Run` step are sourced from a specific Docker repository location.
   - Enforce Required Namespace:  This policy can be used to enforce a standard namespace (such as `<+org.name>`) is used in all CI stages and Container StepGroups.

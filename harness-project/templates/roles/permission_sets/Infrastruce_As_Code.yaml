@@ -13,7 +13,6 @@ permissions: [
   "iac_playbook_edit",
   "iac_playbook_editvariable",
   "iac_playbook_view",
-  "iac_providerregistry_view",
   "iac_registry_view",
   "iac_variableset_delete",
   "iac_variableset_edit",

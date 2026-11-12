@@ -1,9 +1,9 @@
 ---
 ########################
-# Harness Resource Group Management
+# Harness User Group Management
 #
-# The ResourceGroup name
-# When creating a new Harness ResourceGroup, the following is used:
+# The UserGroup name
+# When creating a new Harness UserGroup, the following is used:
 # - name = The name of this file. Hyphens and underscores are converted into spaces
 # - identifier = The name of this file. Hyphens and spaces are converted into underscores
 #
@@ -12,8 +12,10 @@
 # If you would like to modify the role bindings of those groups, you can add to the bindings by
 # creating a new file in this directory using the exact identifier.
 ########################
-id: harness_project_setup
-resource_filters:
-  - type: PIPELINE
-    identifiers:
-      - "Harness_Project_Setup"
+# SSO Configuration
+# linked_sso_type: "SAML" # Required for SSO link
+# linked_sso_id: # Required
+# sso_group_id: # Should be the SSO Group ID to map
+tags:
+  purpose: Lab Infrastructure Users
+role_bindings: []

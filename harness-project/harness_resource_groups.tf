@@ -1,25 +1,43 @@
 locals {
-  resource_groups_files_path = "${local.source_directory}/resource_groups"
-
-  resource_group_files = fileset("${local.resource_groups_files_path}/", "*.yaml")
-
-
-  resource_groups = flatten([
-    for resource_group_file in local.resource_group_files : [
+  local_resource_groups = flatten([
+    for resource_file in fileset("${local.source_directory}/resource_groups/", "*.yaml") : [
       merge(
-        yamldecode(file("${local.resource_groups_files_path}/${resource_group_file}")),
+        yamldecode(file("${local.source_directory}/resource_groups/${resource_file}")),
         {
-          name = replace(resource_group_file, ".yaml", "")
-
+          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
         }
       )
     ]
+  ])
+
+  additional_resource_groups = (
+    var.additional_templates != null
+    ?
+    flatten([
+      for resource_file in fileset("${var.additional_templates}/resource_groups/", "*.yaml") : [
+        merge(
+          yamldecode(file("${var.additional_templates}/resource_groups/${resource_file}")),
+          {
+            identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+            name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+          }
+        )
+      ]
+    ])
+    :
+    []
+  )
+
+  all_resource_groups = flatten([
+    local.local_resource_groups,
+    local.additional_resource_groups
   ])
 }
 resource "harness_platform_resource_group" "resource_group" {
   depends_on = [harness_time_sleep.project_setup]
   for_each = {
-    for resource_group in local.resource_groups : resource_group.name => resource_group
+    for resource_group in local.all_resource_groups : resource_group.name => resource_group
   }
 
   identifier = replace(replace(each.value.name, " ", "_"), "-", "_")
