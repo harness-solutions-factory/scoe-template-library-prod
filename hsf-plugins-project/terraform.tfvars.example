@@ -18,3 +18,33 @@ project_description = "Harness Project managed by Solutions Factory"
 
 # [Optional] Provide a Map of Tags to associate with the resources
 tags = {}
+
+# Provide a map where each key is the 'group.identifer' and the value is a map of keys
+# type = map(object({
+#   slack     = optional(object({ webhook = string }))
+#   msteams   = optional(object({ webhook = string }))
+#   pagerduty = optional(object({ key = string }))
+#   email     = optional(object({
+#     group_email = optional(list(string), [])
+#     email_all   = bool
+#   }))
+# }))
+#
+# group_notifications = {
+#   "group_name_as_defined_in_files" : {
+#     slack = {
+#       webhook = "url"
+#     }
+#     msteams = {
+#       webhook = "url"
+#     }
+#     pagerduty = {
+#       key = "key"
+#     }
+#     email = {
+#       group_email = ["email1", "email2"]
+#       email_all   = true/false
+#     }
+#   }
+# }
+group_notifications = {}
