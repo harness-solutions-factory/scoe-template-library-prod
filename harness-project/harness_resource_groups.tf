@@ -15,15 +15,15 @@ locals {
     var.additional_templates != null
     ?
     flatten([
-    for resource_file in fileset("${var.additional_templates}/resource_groups/", "*.yaml") : [
-      merge(
-        yamldecode(file("${var.additional_templates}/resource_groups/${resource_file}")),
-        {
-          identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
-          name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
-        }
-      )
-    ]
+      for resource_file in fileset("${var.additional_templates}/resource_groups/", "*.yaml") : [
+        merge(
+          yamldecode(file("${var.additional_templates}/resource_groups/${resource_file}")),
+          {
+            identifier = replace(replace(replace(resource_file, ".yaml", ""), " ", "_"), "-", "_")
+            name       = replace(replace(replace(resource_file, ".yaml", ""), "-", "_"), "_", " ")
+          }
+        )
+      ]
     ])
     :
     []
