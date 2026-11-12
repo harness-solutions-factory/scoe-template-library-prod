@@ -80,7 +80,7 @@ resource "harness_platform_resource_group" "hsf_executor_identity_resource_group
   included_scopes {
     filter     = "EXCLUDING_CHILD_SCOPES"
     account_id = var.harness_platform_account
-    org_id = harness_platform_organization.selected.id
+    org_id     = harness_platform_organization.selected.id
   }
   resource_filter {
     include_all_resources = true

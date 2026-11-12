@@ -65,7 +65,6 @@ locals {
           :
           "project"
         )
-        notification_configs = lookup(binding, "notification_configs", [])
       }
     ]
   ])

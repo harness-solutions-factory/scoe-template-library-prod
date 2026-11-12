@@ -2,7 +2,7 @@ locals {
   required_tags = {
     created_by : "Terraform"
     harnessSolutionsFactory : "true"
-    managedResource: "true"
+    managedResource : "true"
   }
 
   common_tags = merge(
